@@ -21,6 +21,8 @@ def recommend(user_keyword, top_n=3):
     df['similarity'] = similarity_scores
     recommended_df = df.sort_values(by='similarity', ascending=False).head(top_n)
 
+    # recommend.py 파일 내부의 수정을 가할 부분입니다.
+
     result = []
     for _, row in recommended_df.iterrows():
         if row['similarity'] == 0:
@@ -29,14 +31,15 @@ def recommend(user_keyword, top_n=3):
             "id": int(row['id']),
             "title": row['title'],
             "overview": row['overview'],
-            "genres": row['genres'].split(' '),
-            "tags": row['tags'].split(' '),
-            "poster_path": "https://via.placeholder.com/150x220?text=" + row['title']
+            "genres": str(row['genres']).split(' ') if pd.notna(row['genres']) else [],
+            "tags": str(row['tags']).split(' ') if pd.notna(row['tags']) else [],
+            # [수정] 가짜 placeholder 대신에 TMDb에서 받아온 실제 이미지 주소와 연도를 매핑합니다.
+            "poster_path": row['poster_path'] if pd.notna(row['poster_path']) else "https://via.placeholder.com/150x220?text=No+Poster",
+            "release_date": str(row['release_date']) if pd.notna(row['release_date']) else "미정"
         })
     
-    # [핵심] Express가 읽을 수 있도록 결과를 JSON 문자열로 출력합니다.
     print(json.dumps(result, ensure_ascii=False))
-
+    
 if __name__ == "__main__":
     # Express가 인자로 던져준 검색 키워드를 받습니다.
     if len(sys.argv) > 1:
