@@ -1,20 +1,28 @@
-# recommend.py
 import sys
 import json
 import joblib
+import os  # <-- 맨 위에 os 모듈이 import 되어 있는지 확인해 주세요!
 from sklearn.metrics.pairwise import cosine_similarity
 
 def recommend_fast(user_keyword, top_n=3):
     try:
-        # [핵심] 0부터 학습하는 대신, 이미 완벽하게 학습 완료된 바이너리 파일을 순식간에 로드합니다.
-        tfidf = joblib.load('tfidf_model.pkl')
-        tfidf_matrix = joblib.load('tfidf_matrix.pkl')
-        df = joblib.load('movie_data.pkl')
-    except Exception as e:
-        # 파일이 없을 때를 대비한 예외 처리
-        print(json.dumps([{"title": "에러", "overview": "모델 파일을 찾을 수 없습니다. train.py를 실행하세요."}]))
-        return
+        # [수정] 현재 recommend.py 파일이 있는 '진짜 폴더 위치'를 절대 경로로 알아냅니다.
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        
+        # 폴더 위치와 파일 이름을 안전하게 결합합니다.
+        tfidf_path = os.path.join(BASE_DIR, 'tfidf_model.pkl')
+        matrix_path = os.path.join(BASE_DIR, 'tfidf_matrix.pkl')
+        data_path = os.path.join(BASE_DIR, 'movie_data.pkl')
 
+        # 절대 경로를 이용해 파일 로드
+        tfidf = joblib.load(tfidf_path)
+        tfidf_matrix = joblib.load(matrix_path)
+        df = joblib.load(data_path)
+        
+    except Exception as e:
+        # 에러 메시지에 어떤 경로에서 에러가 났는지 찍어주면 디버깅이 쉬워집니다.
+        print(json.dumps([{"title": "에러", "overview": f"모델 로드 실패: {str(e)}"}]))
+        return
     # 사용자가 입력한 키워드만 기존 공간의 벡터로 빠르게 변환
     user_vector = tfidf.transform([user_keyword])
 
