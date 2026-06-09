@@ -20,7 +20,10 @@ app.post('/api/search', (req, res) => {
 
     // 'python3 recommend.py "키워드"' 형태로 프로세스 생성 (Windows 환경 테스트 시 'python'으로 변경 가능)
     // Render 환경(리눅스)에서는 무조건 'python3'로 적어야 안전합니다.
-    const pythonProcess = spawn('python3', ['recommend.py', keyword]);
+    
+    // 현재 실행 중인 server.js와 동일한 폴더 안에 있는 recommend.py를 절대 경로로 지정
+    const scriptPath = path.join(__dirname, 'recommend.py');
+    const pythonProcess = spawn('python3', [scriptPath, keyword]);
 
     let resultData = '';
 
