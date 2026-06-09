@@ -1,27 +1,27 @@
 # recommend.py
 import sys
 import json
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
+import joblib
 from sklearn.metrics.pairwise import cosine_similarity
 
-def recommend(user_keyword, top_n=3):
+def recommend_fast(user_keyword, top_n=3):
     try:
-        df = pd.read_csv('movies.csv', encoding='utf-8')
-    except Exception:
-        df = pd.read_csv('movies.csv', encoding='utf-8-sig')
+        # [핵심] 0부터 학습하는 대신, 이미 완벽하게 학습 완료된 바이너리 파일을 순식간에 로드합니다.
+        tfidf = joblib.load('tfidf_model.pkl')
+        tfidf_matrix = joblib.load('tfidf_matrix.pkl')
+        df = joblib.load('movie_data.pkl')
+    except Exception as e:
+        # 파일이 없을 때를 대비한 예외 처리
+        print(json.dumps([{"title": "에러", "overview": "모델 파일을 찾을 수 없습니다. train.py를 실행하세요."}]))
+        return
 
-    df['features'] = df['overview'] + " " + df['genres'] + " " + df['tags']
-
-    tfidf = TfidfVectorizer()
-    tfidf_matrix = tfidf.fit_transform(df['features'])
+    # 사용자가 입력한 키워드만 기존 공간의 벡터로 빠르게 변환
     user_vector = tfidf.transform([user_keyword])
 
+    # 코사인 유사도 검사 (이 연산 자체는 0.001초도 안 걸립니다)
     similarity_scores = cosine_similarity(user_vector, tfidf_matrix).flatten()
     df['similarity'] = similarity_scores
     recommended_df = df.sort_values(by='similarity', ascending=False).head(top_n)
-
-    # recommend.py 파일 내부의 수정을 가할 부분입니다.
 
     result = []
     for _, row in recommended_df.iterrows():
@@ -31,17 +31,15 @@ def recommend(user_keyword, top_n=3):
             "id": int(row['id']),
             "title": row['title'],
             "overview": row['overview'],
-            "genres": str(row['genres']).split(' ') if pd.notna(row['genres']) else [],
-            "tags": str(row['tags']).split(' ') if pd.notna(row['tags']) else [],
-            # [수정] 가짜 placeholder 대신에 TMDb에서 받아온 실제 이미지 주소와 연도를 매핑합니다.
-            "poster_path": row['poster_path'] if pd.notna(row['poster_path']) else "https://via.placeholder.com/150x220?text=No+Poster",
-            "release_date": str(row['release_date']) if pd.notna(row['release_date']) else "미정"
+            "genres": str(row['genres']).split(' ') if row['genres'] else [],
+            "tags": str(row['tags']).split(' ') if row['tags'] else [],
+            "poster_path": row['poster_path'] if row['poster_path'] else "https://via.placeholder.com/150x220?text=No+Poster",
+            "release_date": str(row['release_date']) if row['release_date'] else "미정"
         })
     
     print(json.dumps(result, ensure_ascii=False))
-    
+
 if __name__ == "__main__":
-    # Express가 인자로 던져준 검색 키워드를 받습니다.
     if len(sys.argv) > 1:
         keyword = sys.argv[1]
-        recommend(keyword)
+        recommend_fast(keyword)
