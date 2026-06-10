@@ -74,7 +74,7 @@ body {
 .hero-section {
     /* 토이스토리 오프닝의 파란 하늘과 구름 느낌을 주는 그라데이션 */
     background: linear-gradient(135deg, #4a90e2 0%, #50e3c2 100%);
-    background-image: linear-gradient(rgba(10, 37, 64, 0.4), rgba(10, 37, 64, 0.4)), url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925&auto=format&fit=crop'); /* 픽사 감성의 영화관/하늘 배경 이미지 추천 */
+    background-image: linear-gradient(rgba(10, 37, 64, 0.4), rgba(10, 37, 64, 0.4)), url('../DisneyPixar.png');
     background-size: cover;
     background-position: center;
     color: white;
